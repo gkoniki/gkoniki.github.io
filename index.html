@@ -265,7 +265,7 @@
 <script>
   // ── CONFIG ──────────────────────────────────────────────────
   // Anchor: 2 Mar 2025 = 18:25. So 9 Mar = 18:00, 16 Mar = 18:25, etc.
-  const ANCHOR      = new Date(2025, 2, 2);  // 2 de março de 2025
+  const ANCHOR      = new Date(2026, 2, 2);  // 2 de março de 2026
   const ANCHOR_TIME = "18:25";               // horário nessa data
 
   const TIME_A = "18:00";
@@ -273,11 +273,11 @@
 
   // Segunda-feiras SEM reunião
   const SKIP = [
-    new Date(2025, 2, 30), // 30 de março de 2025
+    new Date(2026, 2, 30), // 30 de março de 2026
   ];
 
   // Última reunião — não mostrar datas após essa
-  const LAST_MEETING = new Date(2025, 6, 6); // 6 de julho de 2025
+  const LAST_MEETING = new Date(2026, 6, 6); // 6 de julho de 2026
   // ────────────────────────────────────────────────────────────
 
   function sameDay(a, b) {
@@ -406,7 +406,7 @@
 
     if (!candidate) {
       document.getElementById('mainText').innerHTML =
-        `<strong>O ciclo de reuniões encerrou.</strong><br><span style="font-size:1rem;color:var(--muted)">A última reunião foi em 6 de julho de 2025.</span>`;
+        `<strong>O ciclo de reuniões encerrou.</strong><br><span style="font-size:1rem;color:var(--muted)">A última reunião foi em 6 de julho de 2026.</span>`;
       document.getElementById('countdown').innerHTML =
         `<span class="dot" style="background:var(--muted);animation:none"></span> Nenhuma reunião futura`;
     } else {
