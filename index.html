@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weekly Meeting</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0b0c10;
+      --surface: #13141a;
+      --border: #22232e;
+      --text: #e8e8f0;
+      --muted: #55566a;
+      --mono: 'DM Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 55% 45% at 15% 25%, rgba(99,179,237,0.07) 0%, transparent 65%),
+        radial-gradient(ellipse 45% 55% at 85% 75%, rgba(154,117,234,0.06) 0%, transparent 65%);
+    }
+
+    .card {
+      width: 100%;
+      max-width: 500px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem 2.5rem 2rem;
+      position: relative;
+      animation: rise 0.5s cubic-bezier(0.22,1,0.36,1);
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 2rem; right: 2rem;
+      height: 2px;
+      border-radius: 0 0 4px 4px;
+      background: var(--accent-line, linear-gradient(90deg, #63b3ed, #9a75ea));
+      transition: background 0.5s;
+    }
+
+    .label {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: var(--mono);
+      margin-bottom: 1.8rem;
+    }
+
+    .meeting-line {
+      font-size: 1.45rem;
+      font-weight: 300;
+      line-height: 1.6;
+      margin-bottom: 0.5rem;
+    }
+
+    .meeting-line strong {
+      font-weight: 700;
+    }
+
+    .time-chip {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 1.4rem;
+      font-weight: 500;
+      padding: 0.1rem 0.55rem;
+      border-radius: 8px;
+      margin: 0 0.1rem;
+    }
+
+    .time-early {
+      background: rgba(99,179,237,0.12);
+      color: #63b3ed;
+      border: 1px solid rgba(99,179,237,0.25);
+    }
+
+    .time-late {
+      background: rgba(154,117,234,0.12);
+      color: #b794f4;
+      border: 1px solid rgba(154,117,234,0.25);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.6rem 0;
+    }
+
+    .countdown {
+      font-size: 0.82rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #63b3ed;
+      animation: blink 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    .dot.purple { background: #b794f4; }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    .skipped-note {
+      margin-top: 1.2rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    .skipped-note::before {
+      content: '⚠ ';
+      opacity: 0.6;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: var(--mono);
+      opacity: 0.4;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="label">◈ Weekly Meeting</div>
+  <div class="meeting-line" id="mainText">Loading…</div>
+  <div class="divider"></div>
+  <div class="countdown" id="countdown"></div>
+  <div id="skippedNote"></div>
+  <div class="footer" id="footer"></div>
+</div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────────
+  // A known Monday and its known time (used as the alternating anchor)
+  const ANCHOR = new Date(2025, 2, 2); // 2 March 2025
+  const ANCHOR_TIME = "18:25";         // time on that date
+
+  const TIME_A = "18:00";
+  const TIME_B = "18:25";
+
+  // Mondays with NO meeting (skip them when counting alternation)
+  const SKIP = [
+    new Date(2025, 2, 30), // 30 March 2025
+  ];
+  // ────────────────────────────────────────────────────────────
+
+  function sameDay(a, b) {
+    return a.getFullYear() === b.getFullYear() &&
+           a.getMonth()    === b.getMonth()    &&
+           a.getDate()     === b.getDate();
+  }
+
+  function isSkipped(d) {
+    return SKIP.some(s => sameDay(s, d));
+  }
+
+  function getMondayOf(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    return d;
+  }
+
+  function addWeek(d) {
+    const n = new Date(d);
+    n.setDate(n.getDate() + 7);
+    return n;
+  }
+
+  // Count how many non-skipped Mondays separate `monday` from ANCHOR
+  // Returns a signed integer (positive = after anchor, negative = before)
+  function stepsFromAnchor(monday) {
+    const anchor = getMondayOf(ANCHOR);
+    const target = new Date(monday); target.setHours(0,0,0,0);
+    anchor.setHours(0,0,0,0);
+
+    if (sameDay(anchor, target)) return 0;
+
+    let steps = 0;
+    let cursor = new Date(anchor);
+
+    if (target > anchor) {
+      while (!sameDay(cursor, target)) {
+        if (!isSkipped(cursor)) steps++;
+        cursor = addWeek(cursor);
+      }
+    } else {
+      while (!sameDay(cursor, target)) {
+        cursor = addWeek(new Date(cursor.getTime() - 14 * 24 * 60 * 60 * 1000));
+        // walk backwards week by week
+      }
+      // simpler backwards walk
+      steps = 0;
+      cursor = new Date(anchor);
+      while (cursor > target) {
+        cursor.setDate(cursor.getDate() - 7);
+        if (!isSkipped(cursor)) steps--;
+      }
+    }
+    return steps;
+  }
+
+  function timeForMonday(monday) {
+    const steps = stepsFromAnchor(monday);
+    // Anchor is TIME_B. Even steps away = same time, odd steps = other time
+    const even = steps % 2 === 0;
+    if (ANCHOR_TIME === TIME_B) return even ? TIME_B : TIME_A;
+    return even ? TIME_A : TIME_B;
+  }
+
+  function formatDate(d) {
+    return d.toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+  }
+
+  function render() {
+    const now = new Date();
+
+    // Find next upcoming Monday (today if it's Monday and meeting hasn't passed yet)
+    let candidate = getMondayOf(now);
+
+    // If today IS Monday, check if meeting time has already passed
+    if (now.getDay() === 1) {
+      const tentativeTime = timeForMonday(candidate);
+      const [h, m] = tentativeTime.split(':').map(Number);
+      const meetingToday = new Date(candidate);
+      meetingToday.setHours(h, m, 0, 0);
+      if (now > meetingToday) {
+        // meeting is over, jump to next week
+        candidate = addWeek(candidate);
+      }
+    } else {
+      // Not Monday — find next Monday
+      candidate = addWeek(candidate);
+      // if today is Sunday (0) this lands on tomorrow correctly;
+      // if today is Tue–Sat, getMondayOf gave last Monday, +7 = next
+    }
+
+    // Skip over no-meeting dates
+    let skippedOver = null;
+    while (isSkipped(candidate)) {
+      skippedOver = new Date(candidate);
+      candidate = addWeek(candidate);
+    }
+
+    const time = timeForMonday(candidate);
+    const isLate = time === TIME_B;
+
+    // Meeting datetime for countdown
+    const [h, m] = time.split(':').map(Number);
+    const meetingDT = new Date(candidate);
+    meetingDT.setHours(h, m, 0, 0);
+
+    // ── Render ──
+    const timeClass = isLate ? 'time-late' : 'time-early';
+    const accentLine = isLate
+      ? 'linear-gradient(90deg, #9a75ea, #63b3ed)'
+      : 'linear-gradient(90deg, #63b3ed, #4fd1c5)';
+
+    document.getElementById('card').style.setProperty('--accent-line', accentLine);
+
+    document.getElementById('mainText').innerHTML =
+      `Next Monday's meeting<br>` +
+      `<strong>${formatDate(candidate)}</strong><br>` +
+      `is at <span class="time-chip ${timeClass}">${time}</span>`;
+
+    // Countdown
+    const diff = meetingDT - new Date();
+    const cdEl = document.getElementById('countdown');
+    if (diff > 0) {
+      const days  = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const mins  = Math.floor((diff % 3600000)  / 60000);
+      let str = '';
+      if (days > 0)        str = `in ${days} day${days !== 1 ? 's' : ''} and ${hours}h`;
+      else if (hours > 0)  str = `in ${hours}h ${mins}min`;
+      else                 str = `in ${mins} minutes — get ready!`;
+      cdEl.innerHTML = `<span class="dot ${isLate ? 'purple' : ''}"></span> ${str}`;
+    } else {
+      cdEl.innerHTML = `<span class="dot" style="background:var(--muted);animation:none"></span> Meeting time has passed`;
+    }
+
+    // Skipped note
+    const noteEl = document.getElementById('skippedNote');
+    if (skippedOver) {
+      const skippedStr = skippedOver.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
+      noteEl.innerHTML = `<div class="skipped-note">No meeting on ${skippedStr} — showing the following week</div>`;
+    } else {
+      noteEl.innerHTML = '';
+    }
+
+    document.getElementById('footer').textContent =
+      `updated ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
+  render();
+  setInterval(render, 60 * 1000);
+</script>
+
+</body>
+</html>
