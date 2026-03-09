@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reunião Mad Maze</title>
+  <title>Aula TI - Mad Maze</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -247,7 +247,7 @@
 <body>
 
 <div class="card" id="card">
-  <div class="label">◈ Reunião Mad Maze</div>
+  <div class="label">◈ Aula TI - Mad Maze</div>
   <div class="meeting-line" id="mainText">Carregando…</div>
   <div class="divider"></div>
   <div class="countdown" id="countdown"></div>
@@ -255,7 +255,7 @@
 
   <div class="schedule-toggle" id="toggleBtn" onclick="toggleSchedule()">
     <span class="toggle-arrow" id="arrow">▶</span>
-    Ver todas as reuniões
+    Ver todas as próximas aulas
   </div>
   <div class="schedule-list" id="scheduleList"></div>
 
@@ -271,12 +271,12 @@
   const TIME_A = "18:00";
   const TIME_B = "18:25";
 
-  // Segunda-feiras SEM reunião
+  // Segunda-feiras SEM aula
   const SKIP = [
     new Date(2026, 2, 30), // 30 de março de 2026
   ];
 
-  // Última reunião — não mostrar datas após essa
+  // Última aula — não mostrar datas após essa
   const LAST_MEETING = new Date(2026, 6, 6); // 6 de julho de 2026
   // ────────────────────────────────────────────────────────────
 
@@ -406,16 +406,16 @@
 
     if (!candidate) {
       document.getElementById('mainText').innerHTML =
-        `<strong>O ciclo de reuniões encerrou.</strong><br><span style="font-size:1rem;color:var(--muted)">A última reunião foi em 6 de julho de 2026.</span>`;
+        `<strong>O ciclo de aulas encerrou.</strong><br><span style="font-size:1rem;color:var(--muted)">A última aula foi em 6 de julho de 2026.</span>`;
       document.getElementById('countdown').innerHTML =
-        `<span class="dot" style="background:var(--muted);animation:none"></span> Nenhuma reunião futura`;
+        `<span class="dot" style="background:var(--muted);animation:none"></span> Nenhuma aula futura`;
     } else {
       const time = timeForMonday(candidate);
       const isLate = time === TIME_B;
       const timeClass = isLate ? 'time-late' : 'time-early';
 
       document.getElementById('mainText').innerHTML =
-        `A próxima reunião de <br>` +
+        `A próxima aula de <br>` +
         `<strong>${formatDatePT(candidate)}</strong><br>` +
         `será às <span class="time-chip ${timeClass}">${time}</span>`;
 
@@ -442,7 +442,7 @@
 
         cdEl.innerHTML = `<span class="dot ${isLate ? 'purple' : ''}"></span> ${str}`;
       } else {
-        cdEl.innerHTML = `<span class="dot" style="background:var(--muted);animation:none"></span> Horário da reunião já passou`;
+        cdEl.innerHTML = `<span class="dot" style="background:var(--muted);animation:none"></span> Horário da aula já passou`;
       }
     }
 
@@ -450,7 +450,7 @@
     const noteEl = document.getElementById('skippedNote');
     if (skippedOver) {
       const s = skippedOver.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' });
-      noteEl.innerHTML = `<div class="skipped-note">Sem reunião em ${s} — exibindo a semana seguinte</div>`;
+      noteEl.innerHTML = `<div class="skipped-note">Sem aula em ${s} — exibindo a semana seguinte</div>`;
     } else {
       noteEl.innerHTML = '';
     }
@@ -474,7 +474,7 @@
 
       const dateStr = formatShortPT(monday) + (isNext ? `<span class="s-next-tag">← próxima</span>` : '');
       const badge   = skipped
-        ? `<span class="s-badge skip">sem reunião</span>`
+        ? `<span class="s-badge skip">sem aula</span>`
         : `<span class="s-badge ${isLate ? 'late' : 'early'}">${time}</span>`;
 
       return `<div class="schedule-item ${isNext ? 'is-next' : ''}">
